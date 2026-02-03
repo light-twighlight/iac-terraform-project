@@ -1,5 +1,5 @@
-resource "aws_security_group" "fastapi_sg" {
-  name = "fastapi-sg"
+resource "aws_security_group" "this" {
+  name = "${var.env}-fastapi-sg"
 
   ingress {
     from_port   = 22
@@ -25,31 +25,30 @@ resource "aws_security_group" "fastapi_sg" {
 
 data "aws_ami" "ubuntu" {
   most_recent = true
+  owners      = ["099720109477"]
 
   filter {
     name   = "name"
     values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
   }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-
-  owners = ["099720109477"] # Canonical
 }
 
-resource "aws_instance" "fastapi_ec2" {
+resource "aws_instance" "this" {
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = var.instance_type
   key_name               = var.key_name
-  vpc_security_group_ids = [aws_security_group.fastapi_sg.id]
+  vpc_security_group_ids = [aws_security_group.this.id]
 
   user_data = <<-EOF
               #!/bin/bash
-              sudo apt update -y
-              sudo apt install -y docker.io
-              sudo systemctl start docker
-              sudo systemctl enable docker
+              apt update -y
+              apt install -y docker.io
+              systemctl start docker
+              systemctl enable docker
               EOF
+
+  tags = {
+    Name        = "${var.env}-fastapi"
+    Environment = var.env
+  }
 }

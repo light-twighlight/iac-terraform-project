@@ -1,13 +1,31 @@
 # iac-terraform-project
-This project demonstrates **Infrastructure as Code (IaC)** using Terraform.
-It provisions an **Ubuntu EC2** instance on AWS with a Security Group and automatically installs **Docker** with a running **FastAPI container**.
+This repository demonstrates a production-style **Infrastructure as Code (IaC)** setup using **Terraform**.
+The project provisions AWS infrastructure in a modular, multi-environment way and includes a basic **CI/CD pipeline** for Terraform validation.
 
 ```
 iac-terraform-project/
-├── provider.tf
-├── main.tf
-├── variables.tf
-├── outputs.tf
+├── .github/
+│   └── workflows/
+│       └── terraform.yml
+├── terraform/
+│   ├── modules/
+│   │   └── ec2/
+│   │       ├── main.tf
+│   │       ├── variables.tf
+│   │       └── outputs.tf
+│   │
+│   └── envs/
+│       ├── dev/
+│       │   ├── main.tf
+│       │   ├── outputs.tf
+│       │   ├── variables.tf
+│       │   └── terraform.tfvars
+│       │
+│       └── prod/
+│           ├── main.tf
+│           ├── variables.tf
+│           └── terraform.tfvars
+│
 └── README.md
 ```
 ---
@@ -20,7 +38,8 @@ iac-terraform-project/
 - Automatic Docker installation via user_data
 - Automatic FastAPI container launch
 - Outputs public IP for quick access
-- Infrastructure is fully defined as code and reproducible
+- Uses the same module for multiple environments
+- Validates Terraform code via CI
 ---
 
 # 📝 Prerequisites
@@ -34,9 +53,17 @@ export AWS_ACCESS_KEY_ID=<your_access_key>
 export AWS_SECRET_ACCESS_KEY=<your_secret_key>
 export AWS_DEFAULT_REGION=eu-central-1
 ```
+Or
+```bash
+aws configure
+```
 ---
 # 🚀 Usage
-
+- All commands are run inside an environment directory.
+- Example: dev
+```bash
+cd terraform/envs/dev
+```
 1. Initialize Terraform:
 ```bash
 terraform init
@@ -63,3 +90,14 @@ ssh -i /path/to/ec2-key.pem ubuntu@<ec2_public_ip>
 ```bash
 terraform destroy
 ```
+---
+# CI/CD
+GitHub Actions workflow:
+ - Runs on push and pull_request
+- Executes:
+    - `terraform fmt -check`
+    - `terraform init`
+    - `terraform validate`
+    - `terraform plan`
+
+No `apply` in CI.
